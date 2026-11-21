@@ -1,0 +1,30 @@
+{
+  "id": "a",
+  "title_hi": "टावर का कचरा",
+  "seed": 7101,
+  "world": "A modern world where a giant Tower appeared. Awakened hunters are ranked E to S and climb the Tower floor by floor for treasure. Guilds rule everything.",
+  "premise": "Arav, a 17-year-old E-rank hunter, is thrown out by his guild Iron Fang and left as bait on Tower floor 1. Dying, he awakens a strange System that converts his pain and hard work into real strength. Everyone still thinks he is trash while he secretly grows. He wants to find out who built the Tower and why the System chose him.",
+  "hero": {
+    "name_en": "Arav",
+    "name_hi": "आरव",
+    "face": "same face every time: 17-year-old boy, sharp jaw, black hair, dark brown eyes",
+    "stages": [
+      {"from_part": 1, "look": "thin and weak, messy black hair, tired sunken eyes, torn brown clothes, dirty"},
+      {"from_part": 6, "look": "healthier, clean dark navy jacket, faint blue glow in his eyes, a floating blue system screen near him"},
+      {"from_part": 16, "look": "tall and muscular, long black combat coat with a silver strap on the shoulder, thin scar on the cheek, glowing golden eyes, red-gold aura, NO blue colors"}
+    ]
+  },
+  "cast_hi": "आरव (हीरो, लड़का), रोहन (गद्दार दोस्त), रुद्र (आयरन फैंग गिल्ड का लीडर, मुख्य विलेन), मेहर (सीधी-सादी हीलर लड़की, आरव की दोस्त), विक्रम (घमंडी ए-रैंक प्रतिद्वंदी), सिस्टम (नीली स्क्रीन वाली आवाज़)",
+  "outline": [
+    "Arav is humiliated and expelled from the guild Iron Fang, his friend Rohan betrays him, and he is left as bait on Tower floor 1. He nearly dies; the System awakens inside him.",
+    "The System's rules are revealed: it converts pain and effort into stats. Arav trains in secret and defeats the floor-1 boss using cleverness and the System.",
+    "He meets Meher, a healer exploited by a guild, saves her, and she keeps his secret.",
+    "A trap trial on floors 2 and 3. The System shows a hidden quest: find who built the Tower.",
+    "Rohan and Iron Fang discover Arav is alive and humiliate him at a public hunter exam. Arav hides his power and fails on purpose.",
+    "A secret dungeon with an ancient relic. Arav's look changes (system awakened stage).",
+    "Iron Fang ambushes him. Arav defeats three members and reveals strength for the first time.",
+    "A guild war is announced. Arav joins a tiny guild called Dawn with Meher.",
+    "A-rank rival Vikram challenges him to a duel. Arav wins but earns Vikram's respect.",
+    "Floor 10 boss fight. Cliffhanger: the System warns of a second System user who is hunting Arav."
+  ]
+}

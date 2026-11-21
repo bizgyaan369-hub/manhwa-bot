@@ -1,0 +1,30 @@
+{
+  "id": "c",
+  "title_hi": "गुलाम की चुराई ताकतें",
+  "seed": 7303,
+  "world": "A city built around dungeon gates. Hunters with licenses fight monsters, porters and slaves carry their loads. Skills are rare and valuable. Light humor mixed with action.",
+  "premise": "Kabir, 16, is a porter treated like a slave by hunters. His ability 'Mimic' looks useless: he can copy any skill he sees used three times. He hides it, grows quietly, and the people who underestimate him pay for it. His tiny slime friend Gulgul provides comedy.",
+  "hero": {
+    "name_en": "Kabir",
+    "name_hi": "कबीर",
+    "face": "same face every time: 16-year-old boy, round friendly face, messy brown hair, bright hazel eyes, sly grin",
+    "stages": [
+      {"from_part": 1, "look": "ragged porter, oversized dirty shirt, huge backpack, thin arms, tired smile"},
+      {"from_part": 6, "look": "licensed hunter outfit, brown leather vest, white scarf, small pouch, a tiny green slime on his shoulder"},
+      {"from_part": 16, "look": "confident and strong, silver hooded cloak, glowing runes on both forearms, calm confident grin, slime on his shoulder"}
+    ]
+  },
+  "cast_hi": "कबीर (हीरो, लड़का), गुलगुल (कबीर का छोटा हरा स्लाइम दोस्त, कॉमेडी), बलराज (घमंडी हंटर पार्टी का लीडर, कबीर को सताता है), दिया (तेज़ तर्रार तीरंदाज़ लड़की), इंस्पेक्टर शमशेर (हंटर एसोसिएशन का जाँचकर्ता)",
+  "outline": [
+    "Kabir is humiliated and underpaid as a porter by the hunter party of Balraj. In a dungeon he finds a tiny slime, Gulgul.",
+    "He accidentally copies a fire skill and discovers his ability Mimic, with funny misunderstandings and a near disaster.",
+    "He practices in secret, funny training fails, and learns the rule: three sightings to copy a skill.",
+    "He takes the hunter licensing exam with a fake weak profile.",
+    "The exam turns into a trap fight; Kabir copies three skills and an examiner notices something odd.",
+    "He joins a low-rank party with Diya. His look changes to the licensed hunter stage.",
+    "A boss raid where Kabir saves the party in a way no one understands.",
+    "He copies a very rare S-class skill and nearly gets exposed.",
+    "The Hunter Association investigates the strange new rookie under Inspector Shamsher.",
+    "Cliffhanger: another person with the same Mimic ability appears."
+  ]
+}

@@ -1,0 +1,30 @@
+{
+  "id": "b",
+  "title_hi": "लौटा हुआ सम्राट",
+  "seed": 7202,
+  "world": "A medieval kingdom of swords, nobles, academies and border wars. Martial power is trained through qi-like 'flame breath'. Nobles rule, commoners are servants.",
+  "premise": "Veer was a loyal general who was betrayed and killed at age 30. He wakes up at age 16 as a stable servant boy with all his memories of the future. He knows who betrays whom and which disasters are coming. He wants to protect his little sister and take revenge on the traitors.",
+  "hero": {
+    "name_en": "Veer",
+    "name_hi": "वीर",
+    "face": "same face every time: 16-year-old boy, narrow serious eyes, short black hair, small scar on the left eyebrow",
+    "stages": [
+      {"from_part": 1, "look": "thin servant boy, simple dirty grey tunic, barefoot, serious old eyes"},
+      {"from_part": 6, "look": "lean trained swordsman, dark grey travelling cloak, leather bracers, a plain iron sword on his back"},
+      {"from_part": 16, "look": "tall warlord, black and gold armor, long red cape, a cold calm stare, sword wrapped in faint flames"}
+    ]
+  },
+  "cast_hi": "वीर (हीरो, लड़का), तारा (वीर की छोटी बहन), आदित्य (घमंडी नवाब का बेटा, पिछले जन्म में वीर का हत्यारा), गुरु हरिओम (बूढ़ा रहस्यमयी गुरु), महामंत्री कालकेतु (राजा का सलाहकार, असली गद्दार)",
+  "outline": [
+    "The death of general Veer at age 30, betrayed. He wakes at 16 in a stable as a servant boy and realizes he came back in time.",
+    "Veer remembers the future, protects his sister Tara from a fever that killed her last time, and plans carefully.",
+    "He wins the village tournament with knowledge of fighting styles and catches the eye of a noble.",
+    "He enters the royal military academy with a fake low rank so nobody suspects him.",
+    "He meets Aditya, the noble who killed him in his past life, and starts a quiet rivalry.",
+    "He prevents the plague that wiped out the northern villages. His look changes to the trained swordsman stage.",
+    "He finds master Guru Hariom, who sees something strange in him and trains him.",
+    "The border war begins years earlier than in his past life. Veer must adapt.",
+    "He uncovers that the real traitor is the royal advisor Kaalketu.",
+    "Cliffhanger: Kaalketu shows signs that he has also returned from the future."
+  ]
+}
