@@ -1,0 +1,76 @@
+name: Manhwa Part (daily)
+
+on:
+  schedule:
+    - cron: "30 2 * * *"
+  workflow_dispatch:
+    inputs:
+      test:
+        description: "Type 1 to only test the video builder (no story, no upload)"
+        default: "0"
+      force:
+        description: "Type 1 to make a part even if today's is already made"
+        default: "0"
+
+permissions:
+  contents: write
+
+concurrency:
+  group: manhwa
+  cancel-in-progress: false
+
+jobs:
+  make:
+    runs-on: ubuntu-latest
+    timeout-minutes: 355
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install tools
+        run: |
+          sudo apt-get update -y
+          sudo apt-get install -y ffmpeg fonts-dejavu-core
+          pip install -r requirements.txt
+
+      - name: Test only (video builder)
+        if: ${{ github.event.inputs.test == '1' }}
+        run: python scripts/make_part.py --selftest
+
+      - name: Make the part
+        if: ${{ github.event.inputs.test != '1' }}
+        env:
+          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+          YT_CLIENT_ID: ${{ secrets.YT_CLIENT_ID }}
+          YT_CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET }}
+          YT_REFRESH_TOKEN: ${{ secrets.YT_REFRESH_TOKEN }}
+          POLLINATIONS_TOKEN: ${{ secrets.POLLINATIONS_TOKEN }}
+          UPLOAD: ${{ vars.UPLOAD || '0' }}
+          PRIVACY: ${{ vars.PRIVACY || 'private' }}
+          FORCE: ${{ github.event.inputs.force || '0' }}
+        run: python scripts/make_part.py
+
+      - name: Save progress (story memory)
+        if: ${{ github.event.inputs.test != '1' }}
+        run: |
+          git config user.name "manhwa-bot"
+          git config user.email "bot@users.noreply.github.com"
+          git add state/
+          git commit -m "progress: auto update" || echo "nothing new"
+          git push || echo "push skipped"
+
+      - name: Keep the test video (test mode)
+        if: ${{ github.event.inputs.test == '1' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: selftest-video
+          path: work/selftest.mp4
+
+      - name: Keep the video for 3 days (in case upload is off)
+        if: ${{ github.event.inputs.test != '1' && vars.UPLOAD != '1' }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: part-video
+          path: work/part.mp4
+          retention-days: 3
