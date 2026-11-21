@@ -1,8 +1,28 @@
 {
-  "next_index": 0,
-  "parts": {"a": 0, "b": 0, "c": 0},
-  "recaps": {"a": "", "b": "", "c": ""},
-  "extra_outline": {"a": [], "b": [], "c": []},
-  "last_date": null,
-  "history": []
+  "next_index": 1,
+  "parts": {
+    "a": 1,
+    "b": 0,
+    "c": 0
+  },
+  "recaps": {
+    "a": "Arav is publicly humiliated and expelled from the Iron Fang guild by its leader Rudra. Despite his low rank, his friend Rohan convinces him to join a Floor 1 mission as a porter. During a monster ambush, Rohan betrays Arav by pushing him into the path of a boss monster to save himself. Left for dead, Arav's intense physical pain triggers a mysterious 'Pain Conversion System.' The System heals him and grants him immense strength based on his suffering. Arav manages to kill the monster, shocking himself with his new power. He finds a strange key and realizes his life has changed forever as he hides from a returning scouting party.",
+    "b": "",
+    "c": ""
+  },
+  "extra_outline": {
+    "a": [],
+    "b": [],
+    "c": []
+  },
+  "last_date": "2026-11-21",
+  "history": [
+    {
+      "date": "2026-11-21",
+      "series": "a",
+      "part": 1,
+      "title": "टावर का कचरा: शून्य से शिखर तक का सफर | भाग 1",
+      "video_id": null
+    }
+  ]
 }
