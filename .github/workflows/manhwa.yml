@@ -45,7 +45,7 @@ jobs:
           YT_CLIENT_ID: ${{ secrets.YT_CLIENT_ID }}
           YT_CLIENT_SECRET: ${{ secrets.YT_CLIENT_SECRET }}
           YT_REFRESH_TOKEN: ${{ secrets.YT_REFRESH_TOKEN }}
-          POLLINATIONS_TOKEN: ${{ secrets.POLLINATIONS_TOKEN }}
+          POLLINATIONS_TOKEN: ${{ secrets.POLLINATIONS_API_KEY }}
           UPLOAD: ${{ vars.UPLOAD || '0' }}
           PRIVACY: ${{ vars.PRIVACY || 'private' }}
           FORCE: ${{ github.event.inputs.force || '0' }}
