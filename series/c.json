@@ -1,30 +1,32 @@
 {
   "id": "c",
-  "title_hi": "गुलाम की चुराई ताकतें",
+  "title_hi": "गिरी हुई तलवार का पुनर्जन्म",
   "seed": 7303,
-  "world": "A city built around dungeon gates. Hunters with licenses fight monsters, porters and slaves carry their loads. Skills are rare and valuable. Light humor mixed with action.",
-  "premise": "Kabir, 16, is a porter treated like a slave by hunters. His ability 'Mimic' looks useless: he can copy any skill he sees used three times. He hides it, grows quietly, and the people who underestimate him pay for it. His tiny slime friend Gulgul provides comedy.",
+  "total_parts": 20,
+  "world": "A martial world ruled by sects, clans, masters and ancient techniques. Swordsmanship is trained through inner energy; duels, tournaments and sect politics decide fates.",
+  "premise": "Seo Jinwoo, a defeated swordsman betrayed by his own disciple, wakes up twenty years before his death in the body of a 16-year-old outer disciple, with all his memories. He finds that the traitor, Cho Myeongak, is still a child, and the child already knows his name.",
+  "ending": "Jinwoo learns the real reason behind Myeongak's betrayal, chooses wisdom over revenge, and the two settle their fate in a final duel that saves the sect.",
   "hero": {
-    "name_en": "Kabir",
-    "name_hi": "कबीर",
-    "face": "same face every time: 16-year-old boy, round friendly face, messy brown hair, bright hazel eyes, sly grin",
+    "name_en": "Seo Jinwoo",
+    "name_hi": "सेओ जिनवू",
+    "face": "same face every time: 16-year-old Korean-style boy, narrow sharp eyes, long black hair tied in a high ponytail, small scar on the left eyebrow",
     "stages": [
-      {"from_part": 1, "look": "ragged porter, oversized dirty shirt, huge backpack, thin arms, tired smile"},
-      {"from_part": 6, "look": "licensed hunter outfit, brown leather vest, white scarf, small pouch, a tiny green slime on his shoulder"},
-      {"from_part": 16, "look": "confident and strong, silver hooded cloak, glowing runes on both forearms, calm confident grin, slime on his shoulder"}
+      {"from_part": 1, "look": "plain grey outer-disciple robe, simple wooden sword, thin build, old and serious eyes"},
+      {"from_part": 6, "look": "dark blue sect robe with a white sash, a silver sword at his hip, confident posture"},
+      {"from_part": 14, "look": "black and white martial robe, long coat flowing in wind, a glowing silver sword with a pale blue sword aura"}
     ]
   },
-  "cast_hi": "कबीर (हीरो, लड़का), गुलगुल (कबीर का छोटा हरा स्लाइम दोस्त, कॉमेडी), बलराज (घमंडी हंटर पार्टी का लीडर, कबीर को सताता है), दिया (तेज़ तर्रार तीरंदाज़ लड़की), इंस्पेक्टर शमशेर (हंटर एसोसिएशन का जाँचकर्ता)",
+  "cast_hi": "सेओ जिनवू (हीरो, लड़का, पुनर्जन्म लेकर लौटा तलवारबाज़), चो म्योंगाक (बचपन में ही सब जानता हुआ लड़का, पिछले जन्म का गद्दार शिष्य), गुरु हान (संप्रदाय के बूढ़े मास्टर), बैक रायो (घमंडी साथी शिष्य), बड़े एल्डर ग्योंग (संप्रदाय का असली ग़द्दार)",
   "outline": [
-    "Kabir is humiliated and underpaid as a porter by the hunter party of Balraj. In a dungeon he finds a tiny slime, Gulgul.",
-    "He accidentally copies a fire skill and discovers his ability Mimic, with funny misunderstandings and a near disaster.",
-    "He practices in secret, funny training fails, and learns the rule: three sightings to copy a skill.",
-    "He takes the hunter licensing exam with a fake weak profile.",
-    "The exam turns into a trap fight; Kabir copies three skills and an examiner notices something odd.",
-    "He joins a low-rank party with Diya. His look changes to the licensed hunter stage.",
-    "A boss raid where Kabir saves the party in a way no one understands.",
-    "He copies a very rare S-class skill and nearly gets exposed.",
-    "The Hunter Association investigates the strange new rookie under Inspector Shamsher.",
-    "Cliffhanger: another person with the same Mimic ability appears."
+    "Jinwoo dies at forty, betrayed by his disciple. He wakes up twenty years earlier as a sixteen-year-old outer disciple. He meets the child Cho Myeongak, who looks at him and says his name with a smile.",
+    "Jinwoo secretly retrieves a lost sword manual he remembers. But Myeongak seems to predict his every move, and Jinwoo starts to suspect he is not an ordinary child.",
+    "The sect entrance trial: Jinwoo hides his real skill and wins by clever use of knowledge of everyone's weaknesses.",
+    "He saves Master Han from a poisoning that killed him in the past life, and changes the timeline for the first time.",
+    "Preparation for the rival-schools tournament. Jinwoo trains in secret in the mountains with an old hermit who tests him.",
+    "Myeongak rises through alliances. Jinwoo recognizes the same patterns that led to his betrayal.",
+    "Sect politics: Jinwoo identifies the elder Gyeong as the one who will sell the sect, but cannot prove it.",
+    "First duel against the elder's disciple Baek Ryo. Jinwoo's sword style is revealed and shocks the sect.",
+    "The timeline changes: events no longer match his memories. Jinwoo loses his advantage and must improvise.",
+    "Cliffhanger: Myeongak whispers a phrase that only Jinwoo's past self could know."
   ]
 }

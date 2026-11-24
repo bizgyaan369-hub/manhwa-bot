@@ -1,6 +1,6 @@
 # Manhwa Part Bot (free)
 
-Roz ek bhaag (~1 ghanta) banata hai, 3 series ghoomti rehti hain: A -> B -> C -> A ...
+Roz ek bhaag (~1 ghanta) banata hai, 4 series ghoomti rehti hain: A -> B -> C -> D -> A ... (series khatam hone par nayi series apne aap banti hai)
 
 ## Kya karta hai
 1. `state/state.json` se dekhta hai aaj kaunsi series aur kaun sa bhaag.

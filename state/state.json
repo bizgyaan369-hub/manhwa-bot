@@ -1,42 +1,11 @@
 {
+  "active": ["a", "b", "c", "d"],
   "next_index": 0,
-  "parts": {
-    "a": 1,
-    "b": 1,
-    "c": 1
-  },
-  "recaps": {
-    "a": "Arav is publicly humiliated and expelled from the Iron Fang guild by its leader Rudra. Despite his low rank, his friend Rohan convinces him to join a Floor 1 mission as a porter. During a monster ambush, Rohan betrays Arav by pushing him into the path of a boss monster to save himself. Left for dead, Arav's intense physical pain triggers a mysterious 'Pain Conversion System.' The System heals him and grants him immense strength based on his suffering. Arav manages to kill the monster, shocking himself with his new power. He finds a strange key and realizes his life has changed forever as he hides from a returning scouting party.",
-    "b": "General Veer is betrayed and killed at age 30 by his comrade Aditya and the advisor Kalkeitu. He unexpectedly wakes up as his 16-year-old self, working as a lowly stable servant. He reunites with his younger sister Tara and vows to protect her this time. When a young, arrogant Aditya arrives at the stables and mistreats the servants, Veer's memories of the future ignite his rage. Despite his weak adolescent body, Veer uses his advanced martial techniques to humiliate Aditya in a brief skirmish. The mysterious Guru Hariom notices Veer's strange prowess from the shadows. Veer realizes his journey for revenge and power has just begun.",
-    "c": "Kabir is a 16-year-old porter who hides his 'Mimic' ability while being treated like a slave by Balraj's hunter party. During a Rank-D dungeon raid, Kabir is forced to carry impossible loads and suffers constant verbal abuse. While the hunters fight, Kabir secretly observes and records their skill patterns. He encounters a small, weak green slime named Gulgul and decides to save it instead of letting it be killed for points. Gulgul becomes his secret companion, providing lighthearted moments amidst the harsh dungeon environment. Kabir manages to copy his first basic skill after seeing it used for the third time during a monster ambush. Balraj steals Kabir's meager earnings at the end of the raid, unaware of Kabir's growing potential. Inspector Shamsher notices a strange energy signature coming from Kabir as the group exits the gate."
-  },
-  "extra_outline": {
-    "a": [],
-    "b": [],
-    "c": []
-  },
-  "last_date": "2026-11-23",
-  "history": [
-    {
-      "date": "2026-11-21",
-      "series": "a",
-      "part": 1,
-      "title": "टावर का कचरा: शून्य से शिखर तक का सफर | भाग 1",
-      "video_id": null
-    },
-    {
-      "date": "2026-11-22",
-      "series": "b",
-      "part": 1,
-      "title": "लौटा हुआ सम्राट: मौत से वापसी और प्रतिशोध की शुरुआत - भाग 1",
-      "video_id": null
-    },
-    {
-      "date": "2026-11-23",
-      "series": "c",
-      "part": 1,
-      "title": "गुलाम की चुराई ताकतें - भाग 1: एक मामूली कुली और जादुई स्लाइम",
-      "video_id": null
-    }
-  ]
+  "parts": {"a": 0, "b": 0, "c": 0, "d": 0},
+  "recaps": {"a": "", "b": "", "c": "", "d": ""},
+  "extra_outline": {"a": [], "b": [], "c": [], "d": []},
+  "custom_series": {},
+  "completed": [],
+  "last_date": null,
+  "history": []
 }

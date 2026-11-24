@@ -1,30 +1,32 @@
 {
   "id": "b",
-  "title_hi": "लौटा हुआ सम्राट",
+  "title_hi": "आख़िरी सवेरा",
   "seed": 7202,
-  "world": "A medieval kingdom of swords, nobles, academies and border wars. Martial power is trained through qi-like 'flame breath'. Nobles rule, commoners are servants.",
-  "premise": "Veer was a loyal general who was betrayed and killed at age 30. He wakes up at age 16 as a stable servant boy with all his memories of the future. He knows who betrays whom and which disasters are coming. He wants to protect his little sister and take revenge on the traitors.",
+  "total_parts": 20,
+  "world": "After an unexplained global catastrophe, scattered human settlements survive beneath an unstable sky: ruined cities, scarce water and power, strange creatures. Action is non-graphic.",
+  "premise": "A second sun appears in the sky and every settlement receives the same unexplained countdown. Han Doyun, a resourceful 19-year-old scavenger who avoids leadership, is forced to protect his settlement. The rival leader Baek Mujin believes strict control is the only way to keep people alive. Clues slowly show what the countdown really means.",
+  "ending": "The countdown ends not as destruction but as a selection; Doyun proves trust and planning beat control, Mujin finally understands, and a new dawn begins.",
   "hero": {
-    "name_en": "Veer",
-    "name_hi": "वीर",
-    "face": "same face every time: 16-year-old boy, narrow serious eyes, short black hair, small scar on the left eyebrow",
+    "name_en": "Han Doyun",
+    "name_hi": "दोयुन",
+    "face": "same face every time: 19-year-old Korean-style boy, short messy dark-brown hair, small scar on the chin, dark circles under tired eyes",
     "stages": [
-      {"from_part": 1, "look": "thin servant boy, simple dirty grey tunic, barefoot, serious old eyes"},
-      {"from_part": 6, "look": "lean trained swordsman, dark grey travelling cloak, leather bracers, a plain iron sword on his back"},
-      {"from_part": 16, "look": "tall warlord, black and gold armor, long red cape, a cold calm stare, sword wrapped in faint flames"}
+      {"from_part": 1, "look": "dirty scavenger jacket, goggles on his forehead, thin and tired"},
+      {"from_part": 6, "look": "patched armored vest, red scarf, a backpack with tools, more confident"},
+      {"from_part": 14, "look": "commander coat with a fur collar, a radio on his shoulder, steady confident stare, sunrise light behind him"}
     ]
   },
-  "cast_hi": "वीर (हीरो, लड़का), तारा (वीर की छोटी बहन), आदित्य (घमंडी नवाब का बेटा, पिछले जन्म में वीर का हत्यारा), गुरु हरिओम (बूढ़ा रहस्यमयी गुरु), महामंत्री कालकेतु (राजा का सलाहकार, असली गद्दार)",
+  "cast_hi": "हान दोयुन (हीरो, लड़का, जो लीडर नहीं बनना चाहता), बैक मूजिन (दूसरी बस्ती का सख़्त लीडर, मुख्य प्रतिद्वंदी), ली सोयुन (बस्ती की इंजीनियर लड़की), बूढ़े डॉक्टर ओह (बस्ती के बुज़ुर्ग), दूसरा सूरज (आसमान का रहस्य)",
   "outline": [
-    "The death of general Veer at age 30, betrayed. He wakes at 16 in a stable as a servant boy and realizes he came back in time.",
-    "Veer remembers the future, protects his sister Tara from a fever that killed her last time, and plans carefully.",
-    "He wins the village tournament with knowledge of fighting styles and catches the eye of a noble.",
-    "He enters the royal military academy with a fake low rank so nobody suspects him.",
-    "He meets Aditya, the noble who killed him in his past life, and starts a quiet rivalry.",
-    "He prevents the plague that wiped out the northern villages. His look changes to the trained swordsman stage.",
-    "He finds master Guru Hariom, who sees something strange in him and trains him.",
-    "The border war begins years earlier than in his past life. Veer must adapt.",
-    "He uncovers that the real traitor is the royal advisor Kaalketu.",
-    "Cliffhanger: Kaalketu shows signs that he has also returned from the future."
+    "A second sun appears and a countdown of one hundred days shows in every settlement. In the panic Doyun's settlement leader dies, and Doyun, a scavenger who hates leadership, is left in charge of two hundred survivors.",
+    "Doyun discovers the first clue: the countdown number changes when people act together. He starts organizing the settlement.",
+    "An expedition for water and power cells meets strange creatures that only appear under the second sun.",
+    "Rival leader Baek Mujin arrives offering protection in exchange for total control. Doyun refuses.",
+    "Betrayal inside: someone is selling information to Mujin. Doyun finds out who and why.",
+    "An expedition into a ruined city finds a sealed bunker with a record about the catastrophe.",
+    "The creatures evolve and attack the settlement. Doyun uses traps and planning and loses a friend.",
+    "Mujin's settlement starves under his harsh rule. Doyun offers cooperation, but Mujin refuses because he sees the countdown as proof he is right.",
+    "A fragment of truth: the countdown is not an end but a selection.",
+    "Cliffhanger: the countdown suddenly jumps ahead. Someone is controlling it, and a signal comes from the sky."
   ]
 }

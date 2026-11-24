@@ -1,0 +1,32 @@
+{
+  "id": "d",
+  "title_hi": "राख का ताज",
+  "seed": 7404,
+  "total_parts": 20,
+  "world": "A fractured empire where noble houses compete for magical authority and control of the throne. Commoners with no innate magic are treated as nothing.",
+  "premise": "No Yunho, a 17-year-old with no innate talent, is repeatedly betrayed and rejected. At a public ceremony he challenges the empire's beloved hero Kim Serin, a naturally gifted and privately arrogant noble, and says: 'The world that praised you will watch you fall.' Through failure, hardship and sacrifice Yunho becomes stronger than Serin. The story follows Yunho's rise with Serin's public image slowly cracking.",
+  "ending": "Yunho ultimately wins through earned strength, strategy and accumulated sacrifices. The victory must be foreshadowed and emotionally credible, not sudden.",
+  "hero": {
+    "name_en": "No Yunho",
+    "name_hi": "नो यूनहो",
+    "face": "same face every time: 17-year-old Korean-style boy, pale thin sharp face, silver-grey eyes, messy dark hair",
+    "stages": [
+      {"from_part": 1, "look": "ragged laborer clothes, dirty, thin, determined silver-grey eyes"},
+      {"from_part": 6, "look": "dark hooded cloak with ash-grey armor pieces, a faint ember glow in his hands"},
+      {"from_part": 14, "look": "black and ember-red royal-style cloak, a circlet made of ash and embers on his head, cold calm stare"}
+    ]
+  },
+  "cast_hi": "नो यूनहो (हीरो, लड़का, जिसमें कोई जन्मजात ताक़त नहीं), किम सेरिन (जनता का चहेता हीरो, पर अंदर से घमंडी रईस), बूढ़ा जादूगर मूं (खदान का टूटा हुआ मास्टर), लेडी हाना (बाग़ी गुट की नेता), काउंट बाक (रईस घराने का साज़िशी)",
+  "outline": [
+    "At a public ceremony, Yunho challenges the empire's beloved hero Kim Serin and says the world will watch him fall. Guards drag him away while the crowd laughs. A short flashback shows how he was rejected.",
+    "Yunho is sold as a mine laborer and meets Master Moon, a broken old mage who teaches him that talent is not everything.",
+    "Noble house politics: Serin's public mask slips in private when he is cruel to a servant. Only Yunho sees it.",
+    "Yunho gains his first power through brutal training, not luck. It leaves permanent scars.",
+    "A friend betrays Yunho and sells him to a noble house; he escapes with a plan.",
+    "Yunho joins Lady Hana's rebel faction and learns strategy.",
+    "Serin's public image cracks for the first time after a scandal that Yunho carefully arranged (non-graphic).",
+    "Yunho fights Serin's champion in a duel and loses, but learns an important lesson.",
+    "Rival houses use both men as pawns. Yunho's following grows.",
+    "Cliffhanger: Serin secretly offers Yunho a deal and reveals he has known Yunho since long ago."
+  ]
+}

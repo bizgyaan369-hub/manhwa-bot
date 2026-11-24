@@ -18,8 +18,10 @@ STATE_PATH = os.path.join(ROOT, "state", "state.json")
 T0 = time.time()
 W, H, FPS = CFG["width"], CFG["height"], CFG["fps"]
 FG_W, FG_H = 540, 720                      # the portrait "panel" in the middle (like the sample video)
-STYLE = ("Korean manhwa webtoon illustration, detailed digital painting, cinematic dramatic lighting, "
-         "vertical portrait composition, no text, no speech bubbles, no watermark")
+STYLE = ("high quality 2D Korean manhwa panel, clean sharp lineart, smooth cel shading, vivid bright colors, soft glowing light, "
+         "expressive anime-style faces with detailed eyes and flowing hair, cinematic composition, detailed fantasy backgrounds, "
+         "East Asian characters, NOT photorealistic, NOT a real photo, NOT a 3D render, "
+         "vertical portrait composition, no text, no letters, no speech bubbles, no watermark")
 
 
 def log(*a):
@@ -113,22 +115,69 @@ def stage_for(series, part):
     return cur
 
 
+def load_series(st, sid):
+    path = os.path.join(ROOT, "series", f"{sid}.json")
+    if os.path.exists(path):
+        return json.load(open(path, encoding="utf-8"))
+    return st["custom_series"][sid]
+
+
+def create_new_series(st):
+    """a finished series is replaced by a brand-new original one (made by Gemini)."""
+    ids = set(st["parts"].keys())
+    new_id = next(c for c in "abcdefghijklmnopqrstuvwxyz" if c not in ids)
+    used = []
+    for sid in st["parts"]:
+        sr = load_series(st, sid)
+        used.append(f"{sr['title_hi']} | {sr['cast_hi']}")
+    p = f"""Create a BRAND-NEW original manhwa-style series for a Hindi YouTube channel (20 episodes of 1 hour each).
+Already used series (never reuse their world, plot or names): {used}
+Rules: the hero is a BOY; ALL character names are Korean, Japanese or Chinese style (never Indian names); the world and plot must be
+completely different from the used series and from any famous existing manhwa; strong hook; the hero changes look in 3 stages as he grows.
+Use popular formulas: regression, weak-to-strong, hidden system, underestimated hero, revenge, survival, dark fantasy.
+Return JSON only:
+{{"title_hi": "title in Devanagari", "world": "English", "premise": "English, 3 sentences",
+ "hero": {{"name_en": "...", "name_hi": "Devanagari", "face": "same face every time: ...",
+   "stages": [{{"from_part": 1, "look": "..."}}, {{"from_part": 6, "look": "..."}}, {{"from_part": 14, "look": "..."}}]}},
+ "cast_hi": "Devanagari names with a short Hindi role in brackets, comma separated",
+ "ending": "how the series ends, English", "outline": ["10 English story beats, 2 sentences each"]}}"""
+    sr = gemini_json(p, temperature=1.0)
+    for k in ("title_hi", "world", "premise", "hero", "cast_hi", "outline"):
+        if k not in sr:
+            raise SystemExit(f"STOP: new series is missing {k}")
+    sr["id"], sr["seed"], sr["total_parts"] = new_id, random.randint(1000, 9999), 20
+    st["custom_series"][new_id] = sr
+    st["parts"][new_id] = 0
+    st["recaps"][new_id] = ""
+    st["extra_outline"][new_id] = []
+    log("New series created:", sr["title_hi"])
+    return new_id
+
+
 def get_beat(series, st, part):
     sid = series["id"]
-    beats = series["outline"] + st["extra_outline"].get(sid, [])
+    total = series.get("total_parts", 20)
+    extra = st["extra_outline"].setdefault(sid, [])
+    beats = series["outline"] + extra
+    part = min(part, total)
     while part > len(beats):
-        log("Outline finished - asking Gemini for 10 more story beats")
+        need = min(10, total - len(beats))
+        finale = len(beats) + need >= total
+        log(f"Outline finished - asking Gemini for {need} more story beats")
         p = f"""You plan an ongoing original Hindi manhwa-style story.
 Series: {series['title_hi']}. Premise: {series['premise']}
 Cast: {series['cast_hi']}
+Ending direction: {series.get('ending', 'a satisfying, earned ending')}
 What happened so far (last recap): {st['recaps'].get(sid, '')}
 Last story beats: {beats[-3:]}
-Write the NEXT 10 story beats (one per part, each part is a 1-hour episode). Keep the hero a boy who keeps growing stronger,
-raise stakes slowly, add new enemies and mysteries, a emotional motive, a few funny moments. Never end the story.
+Write the NEXT {need} story beats (one per part, each part is a 1-hour episode). The hero keeps growing, stakes rise, add new enemies and
+mysteries, an emotional motive, a few funny moments. {'The LAST beat must be the satisfying FINALE of the whole series.' if finale else 'Do not end the story yet.'}
 Return JSON only: {{"beats": ["beat 1 in English, 2 sentences", "..."]}}"""
-        new = gemini_json(p)["beats"]
-        st["extra_outline"].setdefault(sid, []).extend(new)
-        beats = series["outline"] + st["extra_outline"][sid]
+        new = gemini_json(p)["beats"][:need]
+        if not new:
+            raise SystemExit("STOP: Gemini gave no story beats")
+        extra.extend(new)
+        beats = series["outline"] + extra
     return beats[part - 1]
 
 
@@ -140,22 +189,29 @@ def clean_text(t):
     return t
 
 
-def plan_part(series, st, part, beat, stage):
+def plan_part(series, st, part, beat, stage, finale):
     n = CFG["chunks"]
+    end_note = ("THIS IS THE FINAL PART OF THE WHOLE SERIES: resolve every main thread, give an emotional farewell and a satisfying ending (no cliffhanger)."
+                if finale else "End with a strong cliffhanger.")
     prompt = f"""You are the head writer of a Hindi YouTube channel that tells ORIGINAL manhwa-style stories as long recap videos.
 Series: {series['title_hi']}
 World: {series['world']}
 Premise: {series['premise']}
+Ending direction of the whole series: {series.get('ending', 'a satisfying, earned ending')}
 Cast (use these Hindi names exactly): {series['cast_hi']}
 Hero look right now: {stage['look']}
 Part number: {part}
 Story so far (recap of the previous part): {st['recaps'].get(series['id'], '') or 'This is part 1, the story begins.'}
 STORY BEAT FOR THIS PART: {beat}
 
-Split this part into exactly {n} sections that together make one 1-hour episode with a strong hook at the start, rising tension,
-one reversal, a satisfying fight or payoff, and a cliffhanger at the end. Each section = about 5 minutes of narration.
+Split this part into exactly {n} sections that together make one 1-hour episode. It must feel like a top webtoon: a shocking hook in the
+first minute, fast pace (something NEW happens in every section: a reveal, a betrayal, a fight, a power-up, a trick by the hero), a clear
+humiliation -> secret strength -> "face-slap" payoff for the people who underestimated the hero, concrete details (skill names, numbers,
+levels, rewards, rules of the world and the price of every power-up), at least two surprising twists, a little humor. {end_note}
+NEVER be vague or slow, never repeat earlier events. Each section = about 5 minutes of narration.
 Return JSON only:
 {{"title_hi": "catchy Hindi title in Devanagari, max 70 characters, include 'भाग {part}'",
+ "teaser": "the single most shocking moment of this part, 2 English sentences (it will be shown first as a cold open)",
  "description_hi": "2-3 short Hindi sentences about this part. Do not spoil the ending.",
  "tags": ["manhwa", "hindi", "story", "...up to 10 more"],
  "recap": "6 sentence English summary of everything that happens in this part, for future memory",
@@ -168,10 +224,21 @@ Return JSON only:
     return plan
 
 
-def write_chunk(series, stage, part, i, n, sec, tail):
+def write_chunk(series, stage, part, i, n, sec, tail, plan, prev_recap, finale):
     k = CFG["scenes_per_chunk"]
-    last = "This is the LAST section: end on a strong cliffhanger and add one short line asking viewers to subscribe and come for the next part." if i == n - 1 else ""
-    first = "This is the FIRST section: start with a shocking hook line in the very first sentence." if i == 0 else "Continue smoothly from the previous text."
+    if i == n - 1:
+        last = ("This is the LAST section of the whole series: finish the story with a satisfying ending and a warm thank-you line to the viewers."
+                if finale else
+                "This is the LAST section: end on a strong cliffhanger and add one short line asking viewers to subscribe and come for the next part.")
+    else:
+        last = ""
+    if i == 0:
+        recap_line = (f" After the cold open add a brief recap in 2 sentences starting with 'पिछले भाग में', based on: {prev_recap}"
+                      if prev_recap else "")
+        first = (f"This is the FIRST section. Start with a COLD OPEN of 2-3 gripping sentences that show the most shocking moment of this part: {plan.get('teaser', '')}"
+                 f" Then continue with 'कुछ समय पहले...' and tell the story from its real beginning.{recap_line}")
+    else:
+        first = "Continue smoothly from the previous text."
     prompt = f"""You write the narration for a long Hindi manhwa-recap video. Series: {series['title_hi']}, part {part}, section {i + 1} of {n}.
 Cast (use these Hindi names exactly): {series['cast_hi']}
 Hero look right now: {stage_look(stage)}
@@ -180,17 +247,17 @@ SECTION TO WRITE: {sec['heading']}. {sec['events']}
 Previous narration ended with: {tail or '(nothing yet)'}
 
 Write exactly {k} scenes. Each scene has:
-- "narration": 55 to 70 words of spoken Hindi in Devanagari script. Simple everyday Hindi, short dramatic sentences, like a storyteller (third person). Dialogues are told like: आरव ने कहा, "..." . No English letters, no emojis, no brackets, no stage directions, no numbers in digits (write them in words), never say 'panel' or 'chapter'.
-- "image": ONE English sentence (max 40 words) describing a single illustrated manhwa panel for this moment: place, who is in it, their action and expression, mood, camera angle. Describe people by looks, not by name.
+- "narration": 65 to 80 words of spoken Hindi written in Devanagari script, like a popular manhwa-recap YouTuber: energetic, simple everyday Hindi, short punchy sentences, third person, lots of suspense and emotion. Mix in 2 to 4 EASY English words per scene that every manhwa fan knows (for example पावर, सिस्टम, लेवल, बॉस, स्किल, गिल्ड, फाइट, मिशन, रैंक, अलर्ट, हीरो, टावर, ट्रैप, सीक्रेट) but write them in Devanagari letters, never hard English. Dialogues are told like: नाम ने कहा, "..." . No Latin letters at all, no emojis, no brackets, no stage directions, write numbers in words, never say 'panel' or 'chapter'. Be specific and dramatic, not generic. Names must be exactly as in the cast list.
+- "image": ONE English sentence (max 40 words) describing a single illustrated manhwa panel for this moment. VARY the shot type from scene to scene: extreme close-up of eyes, face close-up with strong emotion, character seen from behind looking at a huge view, wide establishing shot of a fantasy place from above, close-up of an object (a cup, a sword, a glowing screen), dynamic action pose with energy effects, group shot. Say place, who is in it, their expression, mood, lighting. Describe people by looks, not by name.
 - "hero": true if the hero boy is visible in that panel, otherwise false.
 Return JSON only: {{"scenes": [{{"narration": "...", "image": "...", "hero": true}}]}}"""
     for _ in range(3):
         d = gemini_json(prompt)
-        sc = [s for s in d.get("scenes", []) if s.get("narration") and s.get("image")]
+        sc = [x for x in d.get("scenes", []) if x.get("narration") and x.get("image")]
         if len(sc) >= max(6, k // 2):
-            for s in sc:
-                s["narration"] = clean_text(s["narration"])
-                s["hero"] = bool(s.get("hero"))
+            for x in sc:
+                x["narration"] = clean_text(x["narration"])
+                x["hero"] = bool(x.get("hero"))
             return sc
         log("Chunk too short, retrying")
     raise SystemExit("STOP: could not write chunk")
@@ -202,14 +269,16 @@ def stage_look(stage):
 
 # ------------------------------------------------------------------ images
 def fetch_image(prompt, seed, path):
-    url = "https://image.pollinations.ai/prompt/" + urllib.parse.quote(prompt[:800])
     headers = {}
     if os.environ.get("POLLINATIONS_TOKEN"):
         headers["Authorization"] = "Bearer " + os.environ["POLLINATIONS_TOKEN"]
-    for attempt in range(4):
+    models = ["flux", "turbo", "flux", "turbo", "flux"]
+    for attempt in range(5):
+        p = prompt if attempt < 2 else prompt[:450]          # later tries: shorter prompt
+        url = "https://image.pollinations.ai/prompt/" + urllib.parse.quote(p[:800])
         try:
-            r = requests.get(url, params={"width": 768, "height": 1024, "seed": seed, "nologo": "true", "model": "flux"},
-                             headers=headers, timeout=150)
+            r = requests.get(url, params={"width": 768, "height": 1024, "seed": seed + attempt, "nologo": "true",
+                                          "model": models[attempt]}, headers=headers, timeout=150)
             if r.status_code == 200 and r.headers.get("content-type", "").startswith("image"):
                 im = Image.open(io.BytesIO(r.content)).convert("RGB")
                 if min(im.size) >= 400:
@@ -218,38 +287,42 @@ def fetch_image(prompt, seed, path):
             log("Image service answered", r.status_code, "- retry")
         except Exception as e:
             log("Image problem:", str(e)[:120])
-        time.sleep(8 * (attempt + 1))
+        time.sleep(6 * (attempt + 1))
     return False
 
 
 def make_images(scenes, series, stage, part):
     seed_base = series["seed"] + 10 * [s["from_part"] for s in series["hero"]["stages"]].index(stage["from_part"])
     hero = series["hero"]
-    prev, fails = None, 0
+    fails = 0
     for i, s in enumerate(scenes):
         if time.time() - T0 > CFG["max_minutes"] * 60 * 0.6:
             raise SystemExit("STOP: images are taking too long")
         path = f"{WORK}/img{i:04d}.jpg"
         prompt = f"{STYLE}. {s['image']}"
         if s["hero"]:
-            prompt += f". Main character {hero['name_en']}: {hero['face']}; {stage['look']}"
+            prompt += f". Main character {hero['name_en']} (a boy): {hero['face']}; {stage['look']}"
         seed = seed_base if s["hero"] else random.randint(1, 10**6)
-        ok = fetch_image(prompt, seed, path)
-        if ok:
-            prev = path
-        else:
+        s["ok"] = fetch_image(prompt, seed, path)
+        s["img"] = path
+        if not s["ok"]:
             fails += 1
             log(f"Image {i} failed ({fails} fails so far)")
-            if fails > max(15, 0.4 * (i + 1)):
+            if i == 4 and fails == 5:
+                raise SystemExit("STOP: the free image service is not answering - not making a video without pictures")
+            if i >= 20 and fails > 0.25 * (i + 1):
                 raise SystemExit("STOP: the free image service keeps failing - not making a junk video")
-            if prev is None:
-                Image.new("RGB", (768, 1024), (20, 20, 30)).save(path)
-            else:
-                Image.open(prev).save(path)
-        s["img"] = path
         if i % 10 == 0:
             log(f"Images: {i + 1}/{len(scenes)}  ({(time.time() - T0) / 60:.0f} min elapsed)")
         time.sleep(CFG["image_sleep"])
+    good = [i for i, s in enumerate(scenes) if s["ok"]]
+    if not good:
+        raise SystemExit("STOP: no picture could be made")
+    for i, s in enumerate(scenes):                        # a failed picture takes the nearest good one - never a black screen
+        if not s["ok"]:
+            j = min(good, key=lambda g: abs(g - i))
+            Image.open(scenes[j]["img"]).save(s["img"])
+    log(f"Pictures ready: {len(good)} new, {len(scenes) - len(good)} copied from the nearest scene")
 
 
 # ------------------------------------------------------------------ voice
@@ -400,35 +473,49 @@ def main():
     if "--selftest" in sys.argv:
         return selftest()
     st = load_state()
+    st.setdefault("custom_series", {})
+    st.setdefault("completed", [])
     ist = datetime.datetime.utcnow() + datetime.timedelta(hours=5, minutes=30)
     today = ist.date().isoformat()
     if st.get("last_date") == today and os.environ.get("FORCE") != "1":
         log("Today's video is already made. Nothing to do. (Use FORCE=1 to make another.)")
         return
-    order = CFG["series_order"]
-    sid = order[st["next_index"] % len(order)]
-    series = json.load(open(os.path.join(ROOT, "series", f"{sid}.json"), encoding="utf-8"))
+    active = st["active"]
+    idx = st["next_index"] % len(active)
+    sid = active[idx]
+    series = load_series(st, sid)
+    total = series.get("total_parts", 20)
+    if st["parts"][sid] >= total:                       # this series is finished -> a brand-new one takes its place
+        log(f"Series '{series['title_hi']}' is complete. Creating a new series.")
+        st["completed"].append(sid)
+        sid = create_new_series(st)
+        active[idx] = sid
+        save_state(st)
+        series = load_series(st, sid)
+        total = series.get("total_parts", 20)
     part = st["parts"][sid] + 1
+    finale = part >= total
     stage = stage_for(series, part)
     beat = get_beat(series, st, part)
-    log(f"Making: {series['title_hi']}  part {part}\nBeat: {beat}\nHero stage: {stage['look']}")
+    log(f"Making: {series['title_hi']}  part {part}/{total}\nBeat: {beat}\nHero stage: {stage['look']}")
 
-    plan = plan_part(series, st, part, beat, stage)
+    plan = plan_part(series, st, part, beat, stage, finale)
     log("Title:", plan["title_hi"])
+    prev_recap = st["recaps"].get(sid, "")
     scenes, tail = [], ""
     n = CFG["chunks"]
     for i, sec in enumerate(plan["sections"]):
-        sc = write_chunk(series, stage, part, i, n, sec, tail)
+        sc = write_chunk(series, stage, part, i, n, sec, tail, plan, prev_recap, finale)
         scenes.extend(sc)
         tail = " ".join(x["narration"] for x in sc[-2:])[-400:]
         log(f"Script: section {i + 1}/{n} done, {len(scenes)} scenes, {sum(len(x['narration'].split()) for x in scenes)} words")
     make_images(scenes, series, stage, part)
-    total = make_voices(scenes)
-    log(f"Total voice length: {total / 60:.1f} minutes")
+    total_len = make_voices(scenes)
+    log(f"Total voice length: {total_len / 60:.1f} minutes")
     final = f"{WORK}/part.mp4"
     build_video(scenes, final)
     log(f"Video ready: {final} ({duration(final) / 60:.1f} min, {os.path.getsize(final) / 1e6:.0f} MB)")
-    json.dump({"plan": plan, "scenes": [{k: v for k, v in s.items() if k in ("narration", "image", "hero")} for s in scenes]},
+    json.dump({"plan": plan, "scenes": [{k: v for k, v in x.items() if k in ("narration", "image", "hero")} for x in scenes]},
               open(f"{WORK}/script.json", "w", encoding="utf-8"), ensure_ascii=False, indent=1)
 
     desc = (plan["description_hi"] + "\n\nयह कहानी पूरी तरह मौलिक (original) है। कहानी, चित्र और आवाज़ AI की मदद से बनाए गए हैं।\n\n"
@@ -443,7 +530,7 @@ def main():
 
     st["parts"][sid] = part
     st["recaps"][sid] = plan["recap"]
-    st["next_index"] = (st["next_index"] + 1) % len(order)
+    st["next_index"] = (idx + 1) % len(active)
     st["last_date"] = today
     st["history"].append({"date": today, "series": sid, "part": part, "title": plan["title_hi"], "video_id": vid})
     save_state(st)
