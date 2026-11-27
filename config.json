@@ -1,12 +1,15 @@
 {
   "voice": "hi-IN-MadhurNeural",
   "voice_rate": "+12%",
-  "chunks": 12,
-  "scenes_per_chunk": 12,
+  "chunks": 10,
+  "scenes_per_chunk": 20,
   "width": 1280,
   "height": 720,
   "fps": 15,
-  "gemini_models": ["gemini-2.5-flash"],
+  "gemini_models": [
+    "gemini-2.5-flash"
+  ],
   "max_minutes": 330,
-  "image_sleep": 4
+  "image_sleep": 4,
+  "min_minutes": 20
 }

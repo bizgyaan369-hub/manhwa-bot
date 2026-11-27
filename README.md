@@ -26,3 +26,14 @@ Phir Run workflow -> test = 0 (asli bhaag, UPLOAD abhi 0 rakho, video "part-vide
 ## Badalne ki jagah
 - config.json : awaaz, kitne hisse/scene
 - series/a.json, b.json, c.json : kahani, hero ke roop, outline
+
+## Image provider fallback (optional keys)
+Image generation now tries providers in this order:
+1. Cloudflare Workers AI FLUX.1 Schnell (`CLOUDFLARE_ACCOUNT_ID` + `CLOUDFLARE_API_TOKEN`)
+2. SiliconFlow (`SILICONFLOW_API_KEY`; optional variable `SILICONFLOW_IMAGE_MODEL`, default `Kwai-Kolors/Kolors`)
+3. Pollinations (`POLLINATIONS_TOKEN` optional)
+
+Add keys only in GitHub: Settings -> Secrets and variables -> Actions -> New repository secret.
+No API key is included in this ZIP. Free quotas and eligibility can change; a free tier is not a promise of unlimited images. If no provider credentials/service are available, image generation stops instead of silently producing an empty video. SiliconFlow account/model limits may differ; the script spaces its requests by at least 31 seconds.
+
+The script now requires exactly the configured number of sections and scenes (default 12 x 12 = 144) so a short AI response cannot silently create a short episode. New custom series use expandable IDs instead of stopping after 26 series.

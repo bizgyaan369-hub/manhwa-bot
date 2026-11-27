@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Hindi manhwa-recap video maker (all free tools). One run = one ~1 hour part.
+"""Hindi manhwa-recap video maker (all free tools). One run = one ~20 minute part.
 
 Flow: pick series (A/B/C rotation) -> Gemini writes the part -> Pollinations draws one image per scene
       -> edge-tts reads Hindi narration -> ffmpeg builds the video -> (optional) YouTube upload -> save state.
@@ -7,7 +7,8 @@ Flow: pick series (A/B/C rotation) -> Gemini writes the part -> Pollinations dra
 Run:   python scripts/make_part.py              normal
        python scripts/make_part.py --selftest   no internet needed, only tests the video builder
 """
-import asyncio, datetime, io, json, os, random, re, subprocess, sys, time, urllib.parse
+import shutil
+import asyncio, base64, datetime, io, json, os, random, re, subprocess, sys, time, urllib.parse
 import requests
 from PIL import Image, ImageDraw, ImageFont
 
@@ -124,8 +125,12 @@ def load_series(st, sid):
 
 def create_new_series(st):
     """a finished series is replaced by a brand-new original one (made by Gemini)."""
-    ids = set(st["parts"].keys())
-    new_id = next(c for c in "abcdefghijklmnopqrstuvwxyz" if c not in ids)
+    # Use unlimited custom IDs; the old a-z allocator stopped after 26 series.
+    used_ids = set(st["parts"].keys())
+    number = 1
+    while f"custom_{number:03d}" in used_ids:
+        number += 1
+    new_id = f"custom_{number:03d}"
     used = []
     for sid in st["parts"]:
         sr = load_series(st, sid)
@@ -204,11 +209,11 @@ Part number: {part}
 Story so far (recap of the previous part): {st['recaps'].get(series['id'], '') or 'This is part 1, the story begins.'}
 STORY BEAT FOR THIS PART: {beat}
 
-Split this part into exactly {n} sections that together make one 1-hour episode. It must feel like a top webtoon: a shocking hook in the
-first minute, fast pace (something NEW happens in every section: a reveal, a betrayal, a fight, a power-up, a trick by the hero), a clear
+Split this part into exactly {n} sections that together make one 22-minute episode. It must feel like a top webtoon: a shocking hook in the
+first 30 seconds, fast pace (something NEW happens in every section: a reveal, a betrayal, a fight, a power-up, a trick by the hero), a clear
 humiliation -> secret strength -> "face-slap" payoff for the people who underestimated the hero, concrete details (skill names, numbers,
 levels, rewards, rules of the world and the price of every power-up), at least two surprising twists, a little humor. {end_note}
-NEVER be vague or slow, never repeat earlier events. Each section = about 5 minutes of narration.
+NEVER be vague or slow, never repeat earlier events. Each section = about 2.2 minutes of narration, made of about {CFG['scenes_per_chunk']} short scenes (2 to 9 seconds each, one picture per scene), so the story must move in small visible actions.
 Return JSON only:
 {{"title_hi": "catchy Hindi title in Devanagari, max 70 characters, include 'भाग {part}'",
  "teaser": "the single most shocking moment of this part, 2 English sentences (it will be shown first as a cold open)",
@@ -218,9 +223,9 @@ Return JSON only:
  "sections": [{{"heading": "short English heading", "events": "3-4 English sentences of what happens in this section"}}]}}"""
     plan = gemini_json(prompt)
     secs = plan.get("sections", [])
-    if len(secs) < n:
-        raise SystemExit("STOP: plan had too few sections")
-    plan["sections"] = secs[:n]
+    if len(secs) != n:
+        raise SystemExit(f"STOP: Gemini returned {len(secs)} sections; exactly {n} are required")
+    plan["sections"] = secs
     return plan
 
 
@@ -246,19 +251,32 @@ SECTION TO WRITE: {sec['heading']}. {sec['events']}
 {first} {last}
 Previous narration ended with: {tail or '(nothing yet)'}
 
-Write exactly {k} scenes. Each scene has:
-- "narration": 65 to 80 words of spoken Hindi written in Devanagari script, like a popular manhwa-recap YouTuber: energetic, simple everyday Hindi, short punchy sentences, third person, lots of suspense and emotion. Mix in 2 to 4 EASY English words per scene that every manhwa fan knows (for example पावर, सिस्टम, लेवल, बॉस, स्किल, गिल्ड, फाइट, मिशन, रैंक, अलर्ट, हीरो, टावर, ट्रैप, सीक्रेट) but write them in Devanagari letters, never hard English. Dialogues are told like: नाम ने कहा, "..." . No Latin letters at all, no emojis, no brackets, no stage directions, write numbers in words, never say 'panel' or 'chapter'. Be specific and dramatic, not generic. Names must be exactly as in the cast list.
-- "image": ONE English sentence (max 40 words) describing a single illustrated manhwa panel for this moment. VARY the shot type from scene to scene: extreme close-up of eyes, face close-up with strong emotion, character seen from behind looking at a huge view, wide establishing shot of a fantasy place from above, close-up of an object (a cup, a sword, a glowing screen), dynamic action pose with energy effects, group shot. Say place, who is in it, their expression, mood, lighting. Describe people by looks, not by name.
+Write about {k} scenes (any number from {k - 3} to {k + 4}). IMPORTANT: a scene is ONE picture. Start a NEW scene (new picture) whenever the visible action, the camera view, the place, or the speaker changes, so a scene lasts only 2 to 9 seconds. Scene lengths must VARY naturally: most scenes should take about 5 to 7 seconds to speak, some quick reactions 2 to 4 seconds, and occasional dramatic lines 8 to 9 seconds. Keep most scenes around 14 to 20 spoken Hindi words, some short scenes 6 to 10 words, and never write a scene that would take more than 9 seconds to speak. AVERAGE about 18 to 20 words per scene. The whole section must total roughly {k * 20} words (never under {k * 17}). Each scene has:
+- "parts": a list that splits the scene's spoken text by WHO speaks, each item {{"who": "...", "text": "..."}}. "who" is one of: narrator, hero (the boy hero), woman (any young woman or girl), villain (an arrogant or evil man), elder (an old man or master). Narrator parts tell the story; when a character speaks, put that spoken line (without quotation marks and without 'he said') in its own part with that character's "who", so each character has a different voice. Most scenes should have 1 to 3 parts and the whole scene's text must follow the word rules below. Each "text" is spoken Hindi written in Devanagari script. Rules for ALL the text: spoken Hindi written in Devanagari script, like a popular manhwa-recap YouTuber: energetic, simple everyday Hindi, short punchy sentences, third person, lots of suspense and emotion. Mix in 2 to 4 EASY English words per scene that every manhwa fan knows (for example पावर, सिस्टम, लेवल, बॉस, स्किल, गिल्ड, फाइट, मिशन, रैंक, अलर्ट, हीरो, टावर, ट्रैप, सीक्रेट) but write them in Devanagari letters, never hard English. Characters' dialogue is spoken directly by them in their own part (a short narrator part may introduce it, like: नाम ने कहा). No Latin letters at all, no emojis, no brackets, no stage directions, write numbers in words, never say 'panel' or 'chapter'. Be specific and dramatic, not generic. Names must be exactly as in the cast list.
+- "image": ONE English sentence (max 40 words) describing a single illustrated manhwa panel for this moment. VARY the shot type from scene to scene: extreme close-up of eyes, face close-up with strong emotion, character seen from behind looking at a huge view, wide establishing shot of a fantasy place from above, close-up of an object (a cup, a sword, a glowing screen), dynamic action pose with energy effects, group shot. Each scene shows ONE new visible action of exactly what the narration says (drawing the sword, walking, turning back, opening a door, falling, attacking), so no two neighbouring scenes look the same. Say place, who is in it, their expression, mood, lighting. Describe people by looks, not by name.
 - "hero": true if the hero boy is visible in that panel, otherwise false.
-Return JSON only: {{"scenes": [{{"narration": "...", "image": "...", "hero": true}}]}}"""
+Return JSON only: {{"scenes": [{{"parts": [{{"who": "narrator", "text": "..."}}], "image": "...", "hero": true}}]}}"""
     for _ in range(3):
         d = gemini_json(prompt)
-        sc = [x for x in d.get("scenes", []) if x.get("narration") and x.get("image")]
-        if len(sc) >= max(6, k // 2):
-            for x in sc:
-                x["narration"] = clean_text(x["narration"])
+        sc = []
+        for x in d.get("scenes", []):
+            parts = []
+            for q in x.get("parts") or []:
+                t = clean_text(str(q.get("text", "")))
+                if t:
+                    w = str(q.get("who", "narrator")).lower()
+                    parts.append({"who": w if w in VOICES else "narrator", "text": t})
+            if not parts and x.get("narration"):
+                parts = [{"who": "narrator", "text": clean_text(x["narration"])}]
+            if parts and x.get("image"):
+                x["parts"] = parts
+                x["narration"] = " ".join(q["text"] for q in parts)
                 x["hero"] = bool(x.get("hero"))
+                sc.append(x)
+        words = sum(len(x['narration'].split()) for x in sc)
+        if k - 4 <= len(sc) <= k + 6 and words >= k * 15:
             return sc
+        log(f"Chunk returned {len(sc)} scenes / {sum(len(x['narration'].split()) for x in sc)} words (wanted about {k} scenes); retrying")
         log("Chunk too short, retrying")
     raise SystemExit("STOP: could not write chunk")
 
@@ -268,26 +286,109 @@ def stage_look(stage):
 
 
 # ------------------------------------------------------------------ images
-def fetch_image(prompt, seed, path):
+_DISABLED_PROVIDERS = set()
+_LAST_SILICONFLOW_IMAGE = 0.0
+
+
+def _save_image_bytes(data, path):
+    im = Image.open(io.BytesIO(data)).convert("RGB")
+    if min(im.size) < 256:
+        raise ValueError(f"image too small: {im.size}")
+    # Keep every panel in the same portrait canvas, even if a provider returns another ratio.
+    from PIL import ImageOps
+    im = ImageOps.fit(im, (768, 1024), method=Image.Resampling.LANCZOS)
+    im.save(path, "JPEG", quality=92, optimize=True)
+
+
+def _cloudflare_image(prompt):
+    account = os.environ.get("CLOUDFLARE_ACCOUNT_ID", "").strip()
+    token = os.environ.get("CLOUDFLARE_API_TOKEN", "").strip()
+    if not (account and token):
+        return None
+    model = "@cf/black-forest-labs/flux-1-schnell"
+    url = f"https://api.cloudflare.com/client/v4/accounts/{account}/ai/run/{model}"
+    r = requests.post(url, headers={"Authorization": f"Bearer {token}"},
+                      json={"prompt": prompt[:2048], "steps": 4}, timeout=180)
+    if r.status_code != 200:
+        if r.status_code in (401, 403, 429):
+            _DISABLED_PROVIDERS.add("cloudflare")
+        raise RuntimeError(f"Cloudflare HTTP {r.status_code}: {r.text[:180]}")
+    payload = r.json()
+    encoded = (payload.get("result") or {}).get("image")
+    if not encoded:
+        raise ValueError(f"Cloudflare returned no image: {str(payload)[:180]}")
+    return base64.b64decode(encoded)
+
+
+def _siliconflow_image(prompt):
+    global _LAST_SILICONFLOW_IMAGE
+    key = os.environ.get("SILICONFLOW_API_KEY", "").strip()
+    if not key:
+        return None
+    # Respect the commonly documented 2-images/minute general limit; model/account limits may be lower.
+    wait = 31 - (time.time() - _LAST_SILICONFLOW_IMAGE)
+    if _LAST_SILICONFLOW_IMAGE and wait > 0:
+        time.sleep(wait)
+    model = os.environ.get("SILICONFLOW_IMAGE_MODEL", "Kwai-Kolors/Kolors")
+    r = requests.post("https://api.siliconflow.cn/v1/images/generations",
+                      headers={"Authorization": f"Bearer {key}", "Content-Type": "application/json"},
+                      json={"model": model, "prompt": prompt[:2000], "image_size": "768x1024", "num_inference_steps": 20},
+                      timeout=180)
+    if r.status_code != 200:
+        if r.status_code in (400, 401, 403, 429):
+            _DISABLED_PROVIDERS.add("siliconflow")
+        raise RuntimeError(f"SiliconFlow HTTP {r.status_code}: {r.text[:180]}")
+    items = r.json().get("images") or []
+    if not items or not items[0].get("url"):
+        raise ValueError("SiliconFlow returned no image URL")
+    image_response = requests.get(items[0]["url"], timeout=120)
+    image_response.raise_for_status()
+    _LAST_SILICONFLOW_IMAGE = time.time()
+    return image_response.content
+
+
+def _pollinations_image(prompt, seed):
     headers = {}
-    if os.environ.get("POLLINATIONS_TOKEN"):
-        headers["Authorization"] = "Bearer " + os.environ["POLLINATIONS_TOKEN"]
-    models = ["flux", "turbo", "flux", "turbo", "flux"]
-    for attempt in range(5):
-        p = prompt if attempt < 2 else prompt[:450]          # later tries: shorter prompt
-        url = "https://image.pollinations.ai/prompt/" + urllib.parse.quote(p[:800])
+    pollinations_key = (os.environ.get("POLLINATIONS_API_KEY") or
+                        os.environ.get("POLLINATIONS_TOKEN") or "").strip()
+    if pollinations_key:
+        headers["Authorization"] = "Bearer " + pollinations_key
+    models = ["flux", "turbo", "flux"]
+    last_error = None
+    for attempt, model in enumerate(models):
+        url = "https://image.pollinations.ai/prompt/" + urllib.parse.quote(prompt[:800])
         try:
-            r = requests.get(url, params={"width": 768, "height": 1024, "seed": seed + attempt, "nologo": "true",
-                                          "model": models[attempt]}, headers=headers, timeout=150)
+            r = requests.get(url, params={"width": 768, "height": 1024, "seed": seed + attempt,
+                                          "nologo": "true", "model": model},
+                             headers=headers, timeout=150)
             if r.status_code == 200 and r.headers.get("content-type", "").startswith("image"):
-                im = Image.open(io.BytesIO(r.content)).convert("RGB")
-                if min(im.size) >= 400:
-                    im.save(path, quality=92)
-                    return True
-            log("Image service answered", r.status_code, "- retry")
+                return r.content
+            last_error = f"Pollinations HTTP {r.status_code}: {r.text[:120]}"
         except Exception as e:
-            log("Image problem:", str(e)[:120])
-        time.sleep(6 * (attempt + 1))
+            last_error = str(e)
+        time.sleep(5 * (attempt + 1))
+    raise RuntimeError(last_error or "Pollinations failed")
+
+
+def fetch_image(prompt, seed, path):
+    # Provider order: Cloudflare -> SiliconFlow -> Pollinations. Missing credentials are skipped.
+    providers = [
+        ("cloudflare", lambda: _cloudflare_image(prompt)),
+        ("siliconflow", lambda: _siliconflow_image(prompt)),
+        ("pollinations", lambda: _pollinations_image(prompt, seed)),
+    ]
+    for name, generate in providers:
+        if name in _DISABLED_PROVIDERS:
+            continue
+        try:
+            data = generate()
+            if data is None:
+                continue
+            _save_image_bytes(data, path)
+            log(f"Image provider: {name}")
+            return True
+        except Exception as e:
+            log(f"{name} image problem: {str(e)[:180]}")
     return False
 
 
@@ -309,16 +410,16 @@ def make_images(scenes, series, stage, part):
             fails += 1
             log(f"Image {i} failed ({fails} fails so far)")
             if i == 4 and fails == 5:
-                raise SystemExit("STOP: the free image service is not answering - not making a video without pictures")
+                raise SystemExit("STOP: no configured image provider is answering - add a working provider key")
             if i >= 20 and fails > 0.25 * (i + 1):
-                raise SystemExit("STOP: the free image service keeps failing - not making a junk video")
+                raise SystemExit("STOP: image providers keep failing - not making a junk video")
         if i % 10 == 0:
             log(f"Images: {i + 1}/{len(scenes)}  ({(time.time() - T0) / 60:.0f} min elapsed)")
         time.sleep(CFG["image_sleep"])
     good = [i for i, s in enumerate(scenes) if s["ok"]]
     if not good:
         raise SystemExit("STOP: no picture could be made")
-    for i, s in enumerate(scenes):                        # a failed picture takes the nearest good one - never a black screen
+    for i, s in enumerate(scenes):
         if not s["ok"]:
             j = min(good, key=lambda g: abs(g - i))
             Image.open(scenes[j]["img"]).save(s["img"])
@@ -326,9 +427,9 @@ def make_images(scenes, series, stage, part):
 
 
 # ------------------------------------------------------------------ voice
-async def _tts(text, path, voice, rate):
+async def _tts(text, path, voice, rate, pitch="+0Hz"):
     import edge_tts
-    await edge_tts.Communicate(text, voice, rate=rate).save(path)
+    await edge_tts.Communicate(text, voice, rate=rate, pitch=pitch).save(path)
 
 
 def duration(path):
@@ -337,24 +438,75 @@ def duration(path):
     return float(out.strip())
 
 
+def fit_scene_audio(path):
+    """Keep each scene's visible duration between 2 and 9 seconds, varying with its speech."""
+    raw = duration(path)
+    min_audio, max_audio = 1.65, 8.55  # add 0.35s visual breathing room in make_voices()
+    if raw > max_audio:
+        # Slightly speed up a long line so one picture is not held too long; a very long line is left as it is (never stop the run for it).
+        factor = raw / max_audio
+        if factor <= 1.25:
+            tmp = path + ".fit.mp3"
+            subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-i", path,
+                            "-filter:a", f"atempo={factor:.5f}", "-t", f"{max_audio:.3f}",
+                            "-c:a", "libmp3lame", "-q:a", "4", tmp], check=True)
+            os.replace(tmp, path)
+        else:
+            log(f"Long scene kept as it is ({raw:.1f}s)")
+            return raw
+    elif raw < min_audio:
+        # Keep very short reaction shots visible for at least two seconds.
+        tmp = path + ".fit.mp3"
+        subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-i", path,
+                        "-af", f"apad=pad_dur={min_audio - raw:.3f}",
+                        "-t", f"{min_audio:.3f}", "-c:a", "libmp3lame", "-q:a", "4", tmp], check=True)
+        os.replace(tmp, path)
+    return duration(path)
+
+
+VOICES = {   # who: (edge voice, pitch, speed change)  - change in config.json "voices" if you like
+    "narrator": ("hi-IN-MadhurNeural", "+0Hz", 0),
+    "hero": ("hi-IN-MadhurNeural", "+10Hz", 4),
+    "villain": ("hi-IN-MadhurNeural", "-14Hz", -6),
+    "elder": ("hi-IN-MadhurNeural", "-22Hz", -14),
+    "woman": ("hi-IN-SwaraNeural", "+0Hz", 2),
+}
+VOICES.update({k: tuple(v) for k, v in CFG.get("voices", {}).items()})
+
+
+def _speak(text, path, who):
+    voice, pitch, bump = VOICES.get(who, VOICES["narrator"])
+    base = int(str(CFG["voice_rate"]).rstrip("%"))
+    for a in range(4):
+        try:
+            asyncio.run(_tts(text, path, voice, f"{base + bump:+d}%", pitch))
+            if os.path.getsize(path) > 1000:
+                return True
+        except Exception as e:
+            log("Voice problem:", who, str(e)[:120])
+        time.sleep(3 * (a + 1))
+    return False
+
+
 def make_voices(scenes):
     total = 0.0
     for i, s in enumerate(scenes):
         p = f"{WORK}/a{i:04d}.mp3"
-        ok = False
-        for a in range(4):
-            try:
-                asyncio.run(_tts(s["narration"], p, CFG["voice"], CFG["voice_rate"]))
-                ok = os.path.getsize(p) > 1500
-                if ok:
-                    break
-            except Exception as e:
-                log("Voice problem:", str(e)[:150])
-            time.sleep(3 * (a + 1))
-        if not ok:
-            raise SystemExit("STOP: edge-tts could not make a voice")
+        files = []
+        for j, q in enumerate(s["parts"]):
+            fp = f"{WORK}/a{i:04d}_{j}.mp3"
+            if not _speak(q["text"], fp, q["who"]):
+                raise SystemExit(f"STOP: edge-tts could not make the required {q['who']} voice; refusing to replace it with narrator voice")
+            files.append(fp)
+        if len(files) == 1:
+            shutil.copy(files[0], p)
+        else:
+            lst = f"{WORK}/a{i:04d}.txt"
+            open(lst, "w").write("".join(f"file '{os.path.abspath(f)}'\n" for f in files))
+            subprocess.run(["ffmpeg", "-y", "-loglevel", "error", "-f", "concat", "-safe", "0", "-i", lst,
+                            "-c:a", "libmp3lame", "-q:a", "4", p], check=True)
         s["audio"] = p
-        s["dur"] = duration(p) + 0.35
+        s["dur"] = fit_scene_audio(p) + 0.35
         total += s["dur"]
         if i % 20 == 0:
             log(f"Voices: {i + 1}/{len(scenes)}  total so far {total / 60:.1f} min")
@@ -490,7 +642,6 @@ def main():
         st["completed"].append(sid)
         sid = create_new_series(st)
         active[idx] = sid
-        save_state(st)
         series = load_series(st, sid)
         total = series.get("total_parts", 20)
     part = st["parts"][sid] + 1
@@ -509,13 +660,15 @@ def main():
         scenes.extend(sc)
         tail = " ".join(x["narration"] for x in sc[-2:])[-400:]
         log(f"Script: section {i + 1}/{n} done, {len(scenes)} scenes, {sum(len(x['narration'].split()) for x in scenes)} words")
+    total_len = make_voices(scenes)                      # voices first (cheap) - so a short video is caught before any picture is made
+    log(f"Total voice length: {total_len / 60:.1f} minutes, {len(scenes)} pictures needed")
+    if total_len < CFG.get("min_minutes", 20) * 60:
+        raise SystemExit(f"STOP: video would be only {total_len / 60:.1f} minutes (minimum {CFG.get('min_minutes', 20)}) - not making it")
     make_images(scenes, series, stage, part)
-    total_len = make_voices(scenes)
-    log(f"Total voice length: {total_len / 60:.1f} minutes")
     final = f"{WORK}/part.mp4"
     build_video(scenes, final)
     log(f"Video ready: {final} ({duration(final) / 60:.1f} min, {os.path.getsize(final) / 1e6:.0f} MB)")
-    json.dump({"plan": plan, "scenes": [{k: v for k, v in x.items() if k in ("narration", "image", "hero")} for x in scenes]},
+    json.dump({"plan": plan, "scenes": [{k: v for k, v in x.items() if k in ("narration", "parts", "image", "hero")} for x in scenes]},
               open(f"{WORK}/script.json", "w", encoding="utf-8"), ensure_ascii=False, indent=1)
 
     desc = (plan["description_hi"] + "\n\nयह कहानी पूरी तरह मौलिक (original) है। कहानी, चित्र और आवाज़ AI की मदद से बनाए गए हैं।\n\n"
