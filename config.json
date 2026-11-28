@@ -7,7 +7,8 @@
   "height": 720,
   "fps": 15,
   "gemini_models": [
-    "gemini-2.5-flash"
+    "gemini-flash-latest",
+    "gemini-3.8-flash"
   ],
   "max_minutes": 330,
   "image_sleep": 4,

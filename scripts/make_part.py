@@ -76,26 +76,31 @@ def gemini_json(prompt, temperature=0.9):
     body = {"contents": [{"parts": [{"text": prompt}]}],
             "generationConfig": {"responseMimeType": "application/json", "temperature": temperature}}
     last = None
-    for model in gemini_models(key):
-        for attempt in range(5):
-            try:
-                url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
-                r = requests.post(url, headers={"x-goog-api-key": key}, json=body, timeout=180)
-                if r.status_code in (400, 403, 404):
-                    last = f"{model} HTTP {r.status_code}: {r.text[:200]}"
-                    log("Skipping model:", last)
-                    break
-                if r.status_code != 200:                      # 429 / 5xx: wait and try again
-                    last = f"{model} HTTP {r.status_code}: {r.text[:200]}"
-                    log("Gemini busy:", last[:120])
-                    time.sleep(20 * (attempt + 1))
-                    continue
-                text = r.json()["candidates"][0]["content"]["parts"][0]["text"]
-                return parse_json(text)
-            except Exception as e:
-                last = f"{model}: {e}"
-                log("Gemini retry:", last[:150])
-                time.sleep(8)
+    for rnd in range(3):
+        for model in gemini_models(key):
+            for attempt in range(3):
+                try:
+                    url = f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"
+                    r = requests.post(url, headers={"x-goog-api-key": key}, json=body, timeout=180)
+                    if r.status_code in (400, 403, 404):
+                        last = f"{model} HTTP {r.status_code}: {r.text[:200]}"
+                        log("Skipping model:", model, r.status_code)
+                        break
+                    if r.status_code != 200:                  # 429 / 5xx: short wait, then try the next model quickly
+                        last = f"{model} HTTP {r.status_code}: {r.text[:200]}"
+                        log("Gemini busy:", model, r.status_code)
+                        if r.status_code == 429 and attempt >= 1:
+                            break
+                        time.sleep(15 * (attempt + 1))
+                        continue
+                    text = r.json()["candidates"][0]["content"]["parts"][0]["text"]
+                    return parse_json(text)
+                except Exception as e:
+                    last = f"{model}: {e}"
+                    log("Gemini retry:", last[:150])
+                    time.sleep(8)
+        log("All Gemini models busy - waiting 90 seconds, round", rnd + 1)
+        time.sleep(90)
     raise SystemExit(f"STOP: Gemini failed. Last error: {last}")
 
 
@@ -203,7 +208,7 @@ Series: {series['title_hi']}
 World: {series['world']}
 Premise: {series['premise']}
 Ending direction of the whole series: {series.get('ending', 'a satisfying, earned ending')}
-Cast (use these Hindi names exactly): {series['cast_hi']}
+Cast (use these Hindi names exactly): {series['cast_hi']}. ALL person names must be Korean, Japanese or Chinese style, NEVER Indian or Hindi names (no राहुल, अमन, प्रिया, राज, अर्जुन etc.). Any extra named person you invent must also have a Korean/Japanese/Chinese name written in Devanagari.
 Hero look right now: {stage['look']}
 Part number: {part}
 Story so far (recap of the previous part): {st['recaps'].get(series['id'], '') or 'This is part 1, the story begins.'}
@@ -245,7 +250,7 @@ def write_chunk(series, stage, part, i, n, sec, tail, plan, prev_recap, finale):
     else:
         first = "Continue smoothly from the previous text."
     prompt = f"""You write the narration for a long Hindi manhwa-recap video. Series: {series['title_hi']}, part {part}, section {i + 1} of {n}.
-Cast (use these Hindi names exactly): {series['cast_hi']}
+Cast (use these Hindi names exactly): {series['cast_hi']}. ALL person names must be Korean, Japanese or Chinese style, NEVER Indian or Hindi names (no राहुल, अमन, प्रिया, राज, अर्जुन etc.). Any extra named person you invent must also have a Korean/Japanese/Chinese name written in Devanagari.
 Hero look right now: {stage_look(stage)}
 SECTION TO WRITE: {sec['heading']}. {sec['events']}
 {first} {last}
@@ -347,26 +352,36 @@ def _siliconflow_image(prompt):
     return image_response.content
 
 
+_LAST_POLLINATIONS = 0.0
+
+
 def _pollinations_image(prompt, seed):
+    # Pollinations free limit = 1 picture every 45 seconds, so we wait 47 seconds between requests (then it says yes).
+    global _LAST_POLLINATIONS
     headers = {}
     pollinations_key = (os.environ.get("POLLINATIONS_API_KEY") or
                         os.environ.get("POLLINATIONS_TOKEN") or "").strip()
     if pollinations_key:
         headers["Authorization"] = "Bearer " + pollinations_key
-    models = ["flux", "turbo", "flux"]
+    models = ["flux", "turbo", "flux", "turbo"]
     last_error = None
     for attempt, model in enumerate(models):
+        wait = 47 - (time.time() - _LAST_POLLINATIONS)
+        if wait > 0:
+            time.sleep(wait)
         url = "https://image.pollinations.ai/prompt/" + urllib.parse.quote(prompt[:800])
         try:
+            _LAST_POLLINATIONS = time.time()
             r = requests.get(url, params={"width": 768, "height": 1024, "seed": seed + attempt,
                                           "nologo": "true", "model": model},
                              headers=headers, timeout=150)
+            _LAST_POLLINATIONS = time.time()
             if r.status_code == 200 and r.headers.get("content-type", "").startswith("image"):
                 return r.content
             last_error = f"Pollinations HTTP {r.status_code}: {r.text[:120]}"
         except Exception as e:
             last_error = str(e)
-        time.sleep(5 * (attempt + 1))
+        time.sleep(3)
     raise RuntimeError(last_error or "Pollinations failed")
 
 
